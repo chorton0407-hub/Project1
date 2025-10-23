@@ -7,17 +7,7 @@
 		"api/**": { "runtime": "nodejs20.x" },
 		"app/**/route.js": { "runtime": "nodejs20.x" },
 		"app/**/route.mjs": { "runtime": "nodejs20.x" }
-	},
-	"env": {
-        "NEXTAUTH_URL": "@nextauth_url",
-        "DATABASE_URL": "@database_url",
-        "GEMINI_API_KEY": "@gemini_api_key",
-        "NEXTAUTH_SECRET": "@nextauth_secret"
-	},
-	"build": {
-		"env": {
-			"NEXTAUTH_URL": "@nextauth_url"
-		}
 	}
+
 }
 
