@@ -1,1 +1,23 @@
+{
+	"version": 2,
+	"framework": "nextjs",
+	"installCommand": "npm ci",
+	"buildCommand": "next build",
+	"functions": {
+		"api/**": { "runtime": "nodejs20.x" },
+		"app/**/route.js": { "runtime": "nodejs20.x" },
+		"app/**/route.mjs": { "runtime": "nodejs20.x" }
+	},
+	"env": {
+        "NEXTAUTH_URL": "https://bubblechat-git-main-chorton0407-hubs-projects.vercel.app",
+        "DATABASE_URL": "postgresql://neondb_owner:npg_Az4cUapk2EGq@ep-shy-bonus-ad2aau71-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require",
+        "GEMINI_API_KEY": "AIzaSyCb60rRId1whW9OTVOQhRlcFm_ilECCO1I",
+        "NEXTAUTH_SECRET": "DdgLiTKLE3WkzmHZsYDSdChax/GSFEDIq5hsWOoRLMU="
+	},
+	"build": {
+		"env": {
+			"NEXTAUTH_URL": "@nextauth_url"
+		}
+	}
+}
 
