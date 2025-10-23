@@ -1,8 +1,4 @@
-import dynamic from "next/dynamic";
-
-const ChatIndexClient = dynamic(() => import("@/components/ChatIndexClient"), {
-  ssr: false,
-});
+import ChatIndexClient from "@/components/ChatIndexClient";
 
 export default function ChatIndex() {
   return <ChatIndexClient />;
