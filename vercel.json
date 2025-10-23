@@ -1,13 +1,5 @@
 {
-	"version": 2,
-	"framework": "nextjs",
-	"installCommand": "npm ci",
-	"buildCommand": "next build",
-	"functions": {
-		"api/**": { "runtime": "nodejs20.x" },
-		"app/**/route.js": { "runtime": "nodejs20.x" },
-		"app/**/route.mjs": { "runtime": "nodejs20.x" }
-	}
-
+  "installCommand": "npm ci",
+  "buildCommand": "next build"
 }
 
