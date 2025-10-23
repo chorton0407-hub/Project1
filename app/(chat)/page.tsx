@@ -1,14 +1,20 @@
-import { redirect } from "next/navigation";
+"use client";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+export default function ChatIndex() {
+  const router = useRouter();
 
-export default async function ChatIndex() {
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_BASE_URL ?? ""}/api/conversations`,
-    { method: "POST", cache: "no-store" }
-  );
-  if (!res.ok) redirect("/login");
-  const { id } = await res.json();
-  redirect(`/conversation/${id}`);
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const res = await fetch("/api/conversations", { method: "POST" });
+      if (!res.ok) return router.replace("/login");
+      const { id } = await res.json();
+      if (!cancelled) router.replace(`/conversation/${id}`);
+    })();
+    return () => { cancelled = true; };
+  }, [router]);
+
+  return <div className="p-6 text-sm text-neutral-400">Creating chat…</div>;
 }
