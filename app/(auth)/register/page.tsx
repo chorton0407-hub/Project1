@@ -20,24 +20,11 @@ export default function Register() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password, name }),
       });
-
-      // Try to parse JSON, even on errors; fall back to text if not JSON
-      let payload: any = null;
-      try {
-        payload = await res.json();
-      } catch {
-        try {
-          payload = { error: await res.text() };
-        } catch {
-          payload = {};
-        }
-      }
-
+      const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setError(payload?.error || `Register failed (HTTP ${res.status})`);
+        setError(data?.error || `Register failed (HTTP ${res.status})`);
         return;
       }
-
       router.push("/login");
     } catch (err: any) {
       setError(err?.message || "Network error");
@@ -50,30 +37,11 @@ export default function Register() {
     <div className="max-w-sm mx-auto pt-24">
       <h1 className="text-2xl mb-6">Create account</h1>
       <form onSubmit={onSubmit} className="space-y-4">
-        <input
-          className="w-full p-2 bg-neutral-800"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="Name (optional)"
-        />
-        <input
-          className="w-full p-2 bg-neutral-800"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="Email"
-        />
-        <input
-          className="w-full p-2 bg-neutral-800"
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder="Password (min 8)"
-        />
+        <input className="w-full p-2 bg-neutral-800" value={name} onChange={(e)=>setName(e.target.value)} placeholder="Name (optional)" />
+        <input className="w-full p-2 bg-neutral-800" value={email} onChange={(e)=>setEmail(e.target.value)} placeholder="Email" />
+        <input className="w-full p-2 bg-neutral-800" type="password" value={password} onChange={(e)=>setPassword(e.target.value)} placeholder="Password (min 8)" />
         {error && <p className="text-red-400 text-sm">{error}</p>}
-        <button
-          disabled={loading}
-          className="w-full p-2 bg-white text-black disabled:opacity-60"
-        >
+        <button disabled={loading} className="w-full p-2 bg-white text-black disabled:opacity-60">
           {loading ? "Registering…" : "Register"}
         </button>
       </form>
