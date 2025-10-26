@@ -1,12 +1,13 @@
 export const runtime = "nodejs";
 import { NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
 
-export async function POST(req: Request) {
+export async function POST() {
   try {
-    const body = await req.json().catch(() => ({}));
-    return NextResponse.json({ ok: true, echo: body }, { status: 201 });
+    const r = await prisma.$queryRaw`SELECT 1::int AS ok`;
+    return NextResponse.json({ ok: true, db: r }, { status: 200 });
   } catch (e: any) {
-    console.error("register noop error:", e);
-    return NextResponse.json({ error: e?.message || "Server error" }, { status: 500 });
+    console.error("DB connectivity error:", e);
+    return NextResponse.json({ error: e?.code || e?.message || "DB error" }, { status: 500 });
   }
 }
