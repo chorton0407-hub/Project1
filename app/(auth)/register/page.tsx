@@ -7,22 +7,43 @@ export default function Register() {
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
-    const res = await fetch("/api/register", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password, name }),
-    });
-    if (!res.ok) {
-      const j = await res.json();
-      setError(j.error || "Failed");
-      return;
+    setLoading(true);
+    try {
+      const res = await fetch("/api/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password, name }),
+      });
+
+      // Try to parse JSON, even on errors; fall back to text if not JSON
+      let payload: any = null;
+      try {
+        payload = await res.json();
+      } catch {
+        try {
+          payload = { error: await res.text() };
+        } catch {
+          payload = {};
+        }
+      }
+
+      if (!res.ok) {
+        setError(payload?.error || `Register failed (HTTP ${res.status})`);
+        return;
+      }
+
+      router.push("/login");
+    } catch (err: any) {
+      setError(err?.message || "Network error");
+    } finally {
+      setLoading(false);
     }
-    router.push("/login");
   }
 
   return (
@@ -49,7 +70,12 @@ export default function Register() {
           placeholder="Password (min 8)"
         />
         {error && <p className="text-red-400 text-sm">{error}</p>}
-        <button className="w-full p-2 bg-white text-black">Register</button>
+        <button
+          disabled={loading}
+          className="w-full p-2 bg-white text-black disabled:opacity-60"
+        >
+          {loading ? "Registering…" : "Register"}
+        </button>
       </form>
     </div>
   );
