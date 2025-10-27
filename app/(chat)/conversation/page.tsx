@@ -1,14 +1,19 @@
-import { redirect } from "next/navigation";
+export const runtime = "nodejs";
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+import { redirect } from "next/navigation";
+import { prisma } from "@/lib/prisma";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 
 export default async function ConversationIndex() {
-  const res = await fetch("/api/conversations", {
-    method: "POST",
-    cache: "no-store",
+  const session = await getServerSession(authOptions);
+  if (!session?.user) redirect("/login");
+
+  const userId = (session.user as any).id as string;
+  const convo = await prisma.conversation.create({
+    data: { userId }, // add any defaults you need
+    select: { id: true },
   });
-  if (!res.ok) redirect("/login");
-  const { id } = await res.json();
-  redirect(`/conversation/${id}`);
+
+  redirect(`/conversation/${convo.id}`);
 }
