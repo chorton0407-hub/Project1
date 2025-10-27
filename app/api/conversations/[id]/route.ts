@@ -5,26 +5,24 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
-export async function POST() {
+export async function DELETE(_: Request, { params }: { params: { id: string } }) {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    let userId = (session.user as any).id as string | undefined;
-    if (!userId && session.user.email) {
-      const u = await prisma.user.findUnique({ where: { email: session.user.email.toLowerCase() }, select: { id: true } });
-      if (!u) return NextResponse.json({ error: "User not found" }, { status: 404 });
-      userId = u.id;
-    }
+    const userId = (session.user as any).id as string | undefined;
     if (!userId) return NextResponse.json({ error: "User id missing" }, { status: 400 });
 
-    const convo = await prisma.conversation.create({
-      data: { userId },
+    const convo = await prisma.conversation.findFirst({
+      where: { id: params.id, userId },
       select: { id: true },
     });
-    return NextResponse.json({ id: convo.id }, { status: 201 });
+    if (!convo) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+    await prisma.conversation.delete({ where: { id: params.id } });
+    return NextResponse.json({ ok: true });
   } catch (e: any) {
-    console.error("POST /api/conversations error:", e?.message || e);
+    console.error("DELETE /api/conversations/[id] error:", e?.message || e);
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }

@@ -1,4 +1,5 @@
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
@@ -6,14 +7,19 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY!);
-
-const MODEL_NAME = "gemini-1.5-flash";
-
 export async function POST(
   req: Request,
   { params }: { params: { id: string } }
 ) {
+  const key = process.env.GOOGLE_API_KEY;
+  if (!key || !key.trim()) {
+    console.error("[ai] GOOGLE_API_KEY missing at runtime");
+    return NextResponse.json({ error: "AI not configured" }, { status: 500 });
+  }
+
+  const genAI = new GoogleGenerativeAI(key);
+  const MODEL_NAME = "gemini-1.5-flash";
+
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user) {
