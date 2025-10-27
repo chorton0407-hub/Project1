@@ -22,13 +22,13 @@ model User {
 }
 
 model Conversation {
-    id        String    @id @default(cuid())
-    title     String    @default("New Chat")
-    user      User      @relation(fields: [userId], references: [id])
-    userId    String
-    createdAt DateTime  @default(now())
-    updatedAt DateTime  @updatedAt
-    messages  Message[]
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  messages  Message[]
 }
 
 model Message {

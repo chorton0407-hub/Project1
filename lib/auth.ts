@@ -36,4 +36,14 @@ export const authOptions: NextAuthOptions = {
   pages: { signIn: "/login", error: "/login"},
   debug: false,
   secret: process.env.NEXTAUTH_SECRET,
+  callbacks: {
+  async jwt({ token, user }) {
+    if (user) token.id = (user as any).id;  // set on initial sign-in
+    return token;
+  },
+  async session({ session, token }) {
+    if (session.user && token?.id) (session.user as any).id = token.id as string;
+    return session;
+  },
+},
 };

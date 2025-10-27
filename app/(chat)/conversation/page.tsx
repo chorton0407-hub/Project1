@@ -8,10 +8,23 @@ import { prisma } from "@/lib/prisma";
 export default async function ConversationIndex() {
   const session = await getServerSession(authOptions);
   if (!session?.user) redirect("/login");
-  const userId = (session.user as any).id as string;
+
+  let userId = (session.user as any).id as string | undefined;
+
+  if (!userId) {
+    const email = session.user.email?.trim().toLowerCase();
+    if (!email) redirect("/login");
+
+    const user = await prisma.user.findUnique({
+      where: { email },
+      select: { id: true },
+    });
+    if (!user) redirect("/login");
+    userId = user.id;
+  }
 
   const convo = await prisma.conversation.create({
-    data: { userId },
+    data: { userId }, 
     select: { id: true },
   });
 
