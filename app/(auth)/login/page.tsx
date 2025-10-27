@@ -1,47 +1,77 @@
 "use client";
+
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 export default function Login() {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const router = useRouter();
+  const [msg, setMsg] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  async function onSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setError(null);
-    const res = await signIn("credentials", {
-      redirect: false,
-      email,
-      password,
-    });
-    if (res?.error) setError(res.error);
-    setError(res.error);
-    return;
+  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();                // prevent full-page GET submit
+    setMsg(null);
+    setLoading(true);
+
+    try {
+      const res = await signIn("credentials", {
+        redirect: false,               // critical: do NOT navigate automatically
+        email,
+        password,
+      });
+
+      console.log("[login] signIn result:", res);
+
+      if (!res) {
+        setMsg("No response from auth. Check console and /api/auth/providers.");
+        return;
+      }
+      if (res.error) {
+        setMsg(res.error === "CredentialsSignin"
+          ? "Invalid email or password."
+          : res.error);
+        return;
+      }
+      // Success:
+      router.push("/conversation");
+    } catch (err: any) {
+      console.error("[login] error:", err);
+      setMsg(err?.message || "Login failed.");
+    } finally {
+      setLoading(false);
+    }
   }
-  
 
   return (
     <div className="max-w-sm mx-auto pt-24">
-      <h1 className="text-2xl mb-6">Log in</h1>
-      <form onSubmit={onSubmit} className="space-y-4">
+      <h1 className="text-2xl mb-4">Log in</h1>
+      <form onSubmit={onSubmit} className="space-y-3">
         <input
           className="w-full p-2 bg-neutral-800"
+          placeholder="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          placeholder="Email"
+          autoComplete="email"
         />
         <input
           className="w-full p-2 bg-neutral-800"
           type="password"
+          placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          placeholder="Password"
+          autoComplete="current-password"
         />
-        {error && <p className="text-red-400 text-sm">{error}</p>}
-        <button className="w-full p-2 bg-white text-black">Login</button>
+        {msg && <p className="text-sm text-red-400">{msg}</p>}
+        <button
+          type="submit"                      // make sure it's a submit button
+          disabled={loading}
+          className="w-full p-2 bg-white text-black disabled:opacity-60"
+        >
+          {loading ? "Signing in…" : "Login"}
+        </button>
       </form>
     </div>
   );
