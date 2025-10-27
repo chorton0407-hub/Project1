@@ -17,7 +17,7 @@ export default async function ConversationPage({ params }: { params: { id: strin
 
   if (!convo) notFound();
 
-  // Pass initial messages to the client component
+
   return (
     <div className="h-full">
       <ChatUI conversationId={convo.id} initialMessages={convo.messages as any} />
