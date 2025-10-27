@@ -12,7 +12,7 @@ const credsSchema = z.object({
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
-  session: { strategy: "database" },
+  session: { strategy: "jwt" },
   providers: [
     Credentials({
       name: "Credentials",
@@ -33,7 +33,7 @@ export const authOptions: NextAuthOptions = {
       },
     }),
   ],
-  pages: { signIn: "/login" },
+  pages: { signIn: "/login", error: "/login"},
   debug: false,
   secret: process.env.NEXTAUTH_SECRET,
 };

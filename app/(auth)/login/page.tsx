@@ -18,8 +18,10 @@ export default function Login() {
       password,
     });
     if (res?.error) setError(res.error);
-    else router.push("/conversation");
+    setError(res.error);
+    return;
   }
+  
 
   return (
     <div className="max-w-sm mx-auto pt-24">
