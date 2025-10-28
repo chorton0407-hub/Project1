@@ -7,12 +7,18 @@ export default function NewConversationButton() {
   const [busy, setBusy] = useState(false);
 
   async function create() {
-    setBusy(true);
     try {
+      setBusy(true);
       const r = await fetch("/api/conversations", { method: "POST" });
-      const data = await r.json();
-      if (r.ok && data?.id) router.push(`/conversation/${data.id}`);
-      else alert(data?.error || "Could not create conversation");
+      const data = await r.json().catch(() => ({}));
+      if (!r.ok || !data?.id) {
+        console.error("New conversation failed:", data);
+        alert(data?.error || "Could not create conversation");
+        return;
+      }
+      // Refresh list first so it appears immediately, then navigate
+      router.refresh();
+      router.push(`/conversation/${data.id}`);
     } finally {
       setBusy(false);
     }

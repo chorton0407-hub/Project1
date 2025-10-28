@@ -11,7 +11,8 @@ export async function POST() {
     const session = await getServerSession(authOptions);
     if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    let userId = (session.user as any).id as string | undefined;
+    // resolve userId from session or email
+    let userId = (session.user as any)?.id as string | undefined;
     if (!userId && session.user.email) {
       const u = await prisma.user.findUnique({
         where: { email: session.user.email.toLowerCase() },
@@ -20,9 +21,10 @@ export async function POST() {
       if (!u) return NextResponse.json({ error: "User not found" }, { status: 404 });
       userId = u.id;
     }
+    if (!userId) return NextResponse.json({ error: "User id missing" }, { status: 400 });
 
     const convo = await prisma.conversation.create({
-      data: { userId: userId!, title: "New chat" },
+      data: { userId, title: "New chat" },
       select: { id: true, title: true },
     });
 
