@@ -7,8 +7,8 @@ export default function NewConversationButton() {
   const [busy, setBusy] = useState(false);
 
   async function create() {
+    setBusy(true);
     try {
-      setBusy(true);
       const r = await fetch("/api/conversations", { method: "POST" });
       const data = await r.json();
       if (r.ok && data?.id) router.push(`/conversation/${data.id}`);
@@ -22,9 +22,10 @@ export default function NewConversationButton() {
     <button
       onClick={create}
       disabled={busy}
-      className="px-3 py-1.5 rounded-xl bg-sky-600 text-white text-sm hover:bg-sky-700 disabled:opacity-60"
+      className="px-2 py-1.5 text-xs rounded bg-sky-600 text-white hover:bg-sky-700 disabled:opacity-60"
+      title="New conversation"
     >
-      {busy ? "Creating…" : "New conversation"}
+      {busy ? "…" : "New"}
     </button>
   );
 }
