@@ -27,7 +27,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
   }
 
   const genAI = new GoogleGenerativeAI(key);
-  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+  const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
 
   try {
     const session = await getServerSession(authOptions);
