@@ -1,4 +1,5 @@
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
@@ -12,17 +13,20 @@ export async function POST() {
 
     let userId = (session.user as any).id as string | undefined;
     if (!userId && session.user.email) {
-      const u = await prisma.user.findUnique({ where: { email: session.user.email.toLowerCase() }, select: { id: true } });
+      const u = await prisma.user.findUnique({
+        where: { email: session.user.email.toLowerCase() },
+        select: { id: true },
+      });
       if (!u) return NextResponse.json({ error: "User not found" }, { status: 404 });
       userId = u.id;
     }
-    if (!userId) return NextResponse.json({ error: "User id missing" }, { status: 400 });
 
     const convo = await prisma.conversation.create({
-      data: { userId },
-      select: { id: true },
+      data: { userId: userId!, title: "New chat" },
+      select: { id: true, title: true },
     });
-    return NextResponse.json({ id: convo.id }, { status: 201 });
+
+    return NextResponse.json({ id: convo.id, title: convo.title }, { status: 201 });
   } catch (e: any) {
     console.error("POST /api/conversations error:", e?.message || e);
     return NextResponse.json({ error: "Server error" }, { status: 500 });
