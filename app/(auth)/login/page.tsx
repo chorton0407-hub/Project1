@@ -12,13 +12,13 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();                // prevent full-page GET submit
+    e.preventDefault(); // prevent full-page GET submit
     setMsg(null);
     setLoading(true);
 
     try {
       const res = await signIn("credentials", {
-        redirect: false,               // critical: do NOT navigate automatically
+        redirect: false, // critical: do NOT navigate automatically
         email,
         password,
       });
@@ -30,9 +30,11 @@ export default function Login() {
         return;
       }
       if (res.error) {
-        setMsg(res.error === "CredentialsSignin"
-          ? "Invalid email or password."
-          : res.error);
+        setMsg(
+          res.error === "CredentialsSignin"
+            ? "Invalid email or password."
+            : res.error
+        );
         return;
       }
       // Success:
@@ -50,14 +52,14 @@ export default function Login() {
       <h1 className="text-2xl mb-4">Log in</h1>
       <form onSubmit={onSubmit} className="space-y-3">
         <input
-          className="w-full p-2 bg-neutral-800"
+          className="w-full p-2 bg-neutral-800 text-white placeholder-neutral-400 rounded-md"
           placeholder="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           autoComplete="email"
         />
         <input
-          className="w-full p-2 bg-neutral-800"
+          className="w-full p-2 bg-neutral-800 text-white placeholder-neutral-400 rounded-md"
           type="password"
           placeholder="Password"
           value={password}
@@ -66,7 +68,7 @@ export default function Login() {
         />
         {msg && <p className="text-sm text-red-400">{msg}</p>}
         <button
-          type="submit"                      // make sure it's a submit button
+          type="submit" // make sure it's a submit button
           disabled={loading}
           className="w-full p-2 bg-white text-black disabled:opacity-60"
         >

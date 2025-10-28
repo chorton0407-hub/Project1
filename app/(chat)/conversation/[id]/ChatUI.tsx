@@ -1,74 +1,128 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
-type Message = { id: string; role: "user" | "assistant"; content: string; createdAt: string };
+type Msg = {
+  id?: string;
+  role: "user" | "assistant";
+  content: string;
+  createdAt?: string;
+};
 
 export default function ChatUI({
   conversationId,
-  initialMessages = [],
+  initialMessages,
 }: {
   conversationId: string;
-  initialMessages?: Message[];
+  initialMessages: Msg[];
 }) {
-  const [messages, setMessages] = useState<Message[]>(initialMessages);
+  const [messages, setMessages] = useState<Msg[]>(initialMessages || []);
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const listRef = useRef<HTMLDivElement>(null);
+
+  // auto-scroll on new messages
+  useEffect(() => {
+    listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: "smooth" });
+  }, [messages.length]);
 
   async function send() {
-    if (!input.trim()) return;
+    const text = input.trim();
+    if (!text || sending) return;
+
+    // optimistic user message
+    const optimistic: Msg = { role: "user", content: text };
+    setMessages((m) => [...m, optimistic]);
+    setInput("");
     setSending(true);
-    setError(null);
+
     try {
-      const res = await fetch(`/api/conversations/${conversationId}/messages`, {
+      const r = await fetch(`/api/conversations/${conversationId}/messages`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ content: input }),
+        body: JSON.stringify({ content: text }),
       });
-      if (!res.ok) {
-        const j = await res.json().catch(() => ({}));
-        throw new Error(j?.error || "Failed to send");
+      const data = await r.json().catch(() => ({} as any));
+
+      if (!r.ok) {
+        // surface server error but keep the user's optimistic message
+        console.error("[send] failed:", data);
+        setMessages((m) => [...m, { role: "assistant", content: data?.error || "Server error" }]);
+        return;
       }
-      const msg = (await res.json()) as Message;
-      setMessages((m) => [...m, msg]);
-      setInput("");
-    } catch (e: any) {
-      setError(e.message || "Error");
+
+      // server returns the assistant message; append it
+      const assistantMsg: Msg = {
+        id: data.id,
+        role: "assistant",
+        content: data.content,
+        createdAt: data.createdAt,
+      };
+      setMessages((m) => [...m, assistantMsg]);
+    } catch (e) {
+      console.error("[send] exception", e);
+      setMessages((m) => [...m, { role: "assistant", content: "Network error." }]);
     } finally {
       setSending(false);
     }
   }
 
+  function onKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      send();
+    }
+  }
+
   return (
-    <div className="flex flex-col h-[calc(100vh-120px)]">
-      <div className="flex-1 overflow-y-auto space-y-3 p-4">
-        {messages.map((m) => (
-          <div key={m.id} className={`max-w-[70%] p-2 rounded-lg ${m.role === "user" ? "bg-blue-600 self-end" : "bg-neutral-800"}`}>
-            <div className="whitespace-pre-wrap text-sm">{m.content}</div>
-            <div className="text-[10px] opacity-60 mt-1">{new Date(m.createdAt).toLocaleString()}</div>
-          </div>
-        ))}
+    <div className="flex flex-col h-[70vh]">
+      {/* Messages */}
+      <div
+        ref={listRef}
+        className="flex-1 overflow-y-auto p-4 space-y-3 bg-neutral-900 text-white rounded-t-2xl"
+      >
+        {messages.length === 0 && (
+          <div className="text-sm text-neutral-400">Say hi to Bubble chat 👋</div>
+        )}
+
+        {messages.map((m, i) => {
+          const isUser = m.role === "user";
+          return (
+            <div key={m.id || i} className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
+              <div
+                className={[
+                  "max-w-[85%] rounded-2xl px-3 py-2 whitespace-pre-wrap break-words",
+                  isUser
+                    ? "bg-sky-600 text-white"
+                    : "bg-neutral-800 text-white border border-neutral-700",
+                ].join(" ")}
+              >
+                {m.content}
+              </div>
+            </div>
+          );
+        })}
       </div>
 
-      <div className="p-3 border-t border-neutral-800">
+      {/* Composer */}
+      <div className="border-t border-neutral-800 bg-neutral-900 rounded-b-2xl p-3">
         <div className="flex gap-2">
           <input
-            className="flex-1 p-2 bg-neutral-800 rounded"
+            className="flex-1 rounded-xl border border-neutral-700 bg-neutral-800 text-white placeholder-neutral-400 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-600"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Type a message…"
-            onKeyDown={(e) => (e.key === "Enter" && !e.shiftKey ? (e.preventDefault(), send()) : null)}
+            onKeyDown={onKeyDown}
+            placeholder="Message Bubble chat…"
+            autoFocus
           />
           <button
-            className="px-3 py-2 bg-white text-black rounded disabled:opacity-60"
             onClick={send}
             disabled={sending || !input.trim()}
+            className="px-4 py-2 rounded-xl bg-sky-600 text-white disabled:opacity-60 hover:bg-sky-700"
           >
-            {sending ? "Sending…" : "Send"}
+            Send
           </button>
         </div>
-        {error && <p className="text-red-400 text-sm mt-2">{error}</p>}
       </div>
     </div>
   );
